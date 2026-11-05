@@ -1,0 +1,38 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_db
+    restart: always
+    environment:
+      # Задаем логин и пароль для администратора базы данных
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secretpassword
+    ports:
+      - "27018:27017" # Порт для внешних приложений
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - compass_network
+
+  compass-web:
+    image: haohanyang/compass-web:latest
+    container_name: compass_web_ui
+    restart: always
+    environment:
+      # Указываем строку подключения к нашей базе внутри Docker-сети
+      # Вместо localhost используем имя сервиса (mongodb)
+      - CW_MONGO_URI=mongodb://root:secretpassword@mongodb:27017/?authSource=admin
+    ports:
+      - "8080:8080" # Порт, на котором откроется веб-интерфейс Compass
+    depends_on:
+      - mongodb
+    networks:
+      - compass_network
+
+volumes:
+  mongo_data:
+
+networks:
+  compass_network:
+    driver: bridge
+
